@@ -98,7 +98,7 @@ async function run() {
           const filter = { _id: new ObjectId(id) };
           const updatedEvent = req.body;
           
-          const updateDoc = {
+          const updateEventDoc = {
             $set: {
               title: updatedEvent.title,
               description: updatedEvent.description,
@@ -110,7 +110,7 @@ async function run() {
             }
           };
           
-          const result = await eventsCollection.updateOne(filter, updateDoc);
+          const result = await eventsCollection.updateOne(filter, updateEventDoc);
           res.send(result);
         } catch (error) {
           res.status(500).send({ message: "Failed to update event", error });
