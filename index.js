@@ -5,6 +5,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 3000;
 
+
+var admin = require("firebase-admin");
+
+var serviceAccount = require("path/to/serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+
 app.use(cors());
 app.use(express.json());
 
@@ -17,6 +27,8 @@ const client = new MongoClient(uri, {
       deprecationErrors: true,
     }
   });
+
+
 
 app.get('/', (req, res) => {
   res.send('Together Now Server is Running!')
