@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 
 var admin = require("firebase-admin");
 
-var serviceAccount = require("path/to/serviceAccountKey.json");
+var serviceAccount = require("./together-now-firebase-adminsdk.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -17,6 +17,35 @@ admin.initializeApp({
 
 app.use(cors());
 app.use(express.json());
+
+
+const logger = (req,res,next) => {
+  console.log('Logging Info');
+  next();
+}
+
+const verifyFireBaseToken = async(req,res,next) => {
+  console.log('In the middleware', req.headers.authorization)
+  if(!req.headers.authorization){
+    return res.status(401).send({message: "Unauthorized access"})
+  }
+  const token = req.headers.authorization.split(' ')[1]
+  if(!token){
+    return res.status(401).send({message: "Unauthorized access"});
+  }
+
+  try{
+    const userInfo = await admin.auth().verifyIdToken(token)
+    req.token_email = userInfo.email;
+    console.log(userInfo); 
+    next()
+  }
+  catch{
+    return res.status(401).send({message: "Unauthorized access"});
+  }
+}
+
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gagl2gk.mongodb.net/?appName=Cluster0`;
 
@@ -43,13 +72,16 @@ async function run() {
       const participantsCollection = db.collection('participants');
 
       
-      app.get("/events", async (req, res) => {
+      app.get("/events",logger,verifyFireBaseToken, async (req, res) => {
         try {
           console.log(req.query);
           const email = req.query.email;
           const query = {};
           
           if (email) {
+            if(email !== req.token_email){
+              return res.status(403).send({message: "Forbidden Access"}) 
+            }
             query.creatorEmail = email;
           }
     
