@@ -49,12 +49,30 @@ async function run() {
         }
       });
 
+      
       app.get("/upcoming-events", async (req, res) => {
         try {
           const currentDate = new Date().toISOString();
+          const { eventType, search } = req.query;
+          
+          
           const query = {
             eventDate: { $gte: currentDate }
           };
+          
+          
+          if (eventType && eventType !== "All") {
+            query.eventType = eventType;
+          }
+          
+          
+          if (search && search.trim() !== "") {
+            query.$or = [
+              { title: { $regex: search, $options: "i" } },
+              { description: { $regex: search, $options: "i" } },
+              { location: { $regex: search, $options: "i" } }
+            ];
+          }
           
           const cursor = eventsCollection.find(query).sort({ eventDate: 1 });
           const result = await cursor.toArray();
@@ -64,6 +82,7 @@ async function run() {
         }
       });
 
+      
       app.get("/events/:id", async (req, res) => {
         try {
           const id = req.params.id;
@@ -80,6 +99,7 @@ async function run() {
         }
       });
 
+      
       app.post("/events", async (req, res) => {
         try {
           const newEvent = req.body;
@@ -92,6 +112,7 @@ async function run() {
         }
       });
 
+     
       app.put("/events/:id", async (req, res) => {
         try {
           const id = req.params.id;
@@ -117,11 +138,13 @@ async function run() {
         }
       });
 
+      
       app.delete("/events/:id", async (req, res) => {
         try {
           const id = req.params.id;
           const query = { _id: new ObjectId(id) };
           const result = await eventsCollection.deleteOne(query);
+          
           
           await participantsCollection.deleteMany({ eventId: id });
           
@@ -131,8 +154,9 @@ async function run() {
         }
       });
 
-      // PARTICIPANTS ROUTES
+      
 
+     
       app.post("/participants", async (req, res) => {
         try {
           const participantData = req.body;
@@ -155,7 +179,7 @@ async function run() {
         }
       });
 
-     
+      
       app.get("/participants/check", async (req, res) => {
         try {
           const { eventId, userEmail } = req.query;
