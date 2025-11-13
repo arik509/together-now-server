@@ -198,13 +198,10 @@ async function run() {
         }
       });
 
-      
-
      
       app.post("/participants", async (req, res) => {
         try {
           const participantData = req.body;
-          
           
           const existingParticipant = await participantsCollection.findOne({
             eventId: participantData.eventId,
